@@ -1,29 +1,69 @@
-// adapted for d3.v5 from d3js in action
+// Stolen from: https://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+const width = 1900
+const height = 500
+
+let yearPicker = document.getElementById("yearPicker")
+for (let i = 1955; i < 2100 + 1; i++) {
+    yearPicker.options[yearPicker.options.length] = new Option(i, i)
+}
+yearPicker.selectedIndex = 2020 - 1955
+
+// Can't use arrow function because of scope
+yearPicker.onchange = function () {
+    const selectedYear = parseInt(this.value)
+    Promise.all([
+        d3.json('world.geojson'),
+        d3.csv('worldPopulation.csv')
+    ]).then(([countries, population]) => {
+        createMap(countries, population, selectedYear)
+    })
+}
 
 Promise.all([
     d3.json('world.geojson'),
     d3.csv('worldPopulation.csv')
 ]).then(([countries, population]) => {
-    createMap(countries, population)
+    createMap(countries, population, 2020)
 })
 
-function createMap(countries, population) {
-    const currentYear = 2010
+function createMap(countries, population, currentYear) {
+    d3.select("svg").selectAll("*").remove()
+
     let countriesOfYear = {}
     population.forEach(element => {
         const cYear = element["Time"]
         if (cYear == currentYear) {
             let nameOfCountry = element.Location
+            // So the UN has official country names, which can be verbose sometimes (like Lao People's Democratic Republic = Laos)
+            // And the geojson has different names for them, so here I swap out the UN names for the geojson ones so that all
+            // countries get colored
+            // This was pretty annoying to do
             switch (element.Location) {
                 case "Russian Federation": nameOfCountry = "Russia"; break;
                 case "Venezuela (Bolivarian Republic of)": nameOfCountry = "Venezuela"; break;
                 case "Bolivia (Plurinational State of)": nameOfCountry = "Bolivia"; break;
                 case "Falkland Islands (Malvinas)": nameOfCountry = "Falkland Islands"; break;
+                case "Dem. People's Republic of Korea": nameOfCountry = "South Korea"; break;
+                case "Republic of Korea": nameOfCountry = "North Korea"; break;
+                case "China, Taiwan Province of China": nameOfCountry = "Taiwan"; break;
+                case "Viet Nam": nameOfCountry = "Vietnam"; break;
+                case "Lao People's Democratic Republic": nameOfCountry = "Laos"; break;
+                case "Iran (Islamic Republic of)": nameOfCountry = "Iran"; break;
+                case "Côte d'Ivoire": nameOfCountry = "Ivory Coast"; break;
+                case "Czechia": nameOfCountry = "Czech Republic"; break;
+                case "Republic of Moldova": nameOfCountry = "Moldova"; break;
+                case "Syrian Arab Republic": nameOfCountry = "Syria"; break;
+                // case "Republic of Congo": nameOfCountry = "Congo"; break;
             }
             countriesOfYear[nameOfCountry] = element;
         }
     })
-
+    console.log(countries)
+    console.log(countriesOfYear)
     let smallestPopulation = parseFloat(countriesOfYear[Object.keys(countriesOfYear)[0]].PopTotal)
     let largestPopulation = parseFloat(countriesOfYear[Object.keys(countriesOfYear)[0]].PopTotal)
     countries.features.forEach(currentCountry => {
@@ -37,12 +77,45 @@ function createMap(countries, population) {
         }
     })
 
-    console.log(smallestPopulation, largestPopulation)
-    const numColors = 9
-    const colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"]
+    const threshHolds = [10000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1500000000]
+    const colors = ["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)", "rgb(3,19,43)"]
+
+    const widthOfLegendBox = 20
+    d3.select("svg")
+        .selectAll("rect")
+        .data(threshHolds)
+        .enter()
+        .append("rect")
+        .attr("x", 1000)
+        .attr("y", (d, i) => 50 + (i * (widthOfLegendBox + 10)))
+        .attr("width", widthOfLegendBox)
+        .attr("height", widthOfLegendBox)
+        .style("fill", (d, i) => colors[i])
+
+    d3.select("svg")
+        .selectAll("text")
+        .data(threshHolds)
+        .enter()
+        .append("text")
+        .attr("x", 1000 + 30)
+        .attr("y", (d, i) => 50 + (widthOfLegendBox / 2) + (i * (widthOfLegendBox + 10)))
+        .attr("dy", ".35em")
+        .text((d) => numberWithCommas(d));
+
+    // d3.select("svg")
+    // .selectAll("text")
+    // .data(threshHolds)
+    // .append("text")
+    // .attr("font-size", "300px")
+    // .text("fooo")
+    // .attr("fill", "red")
+    // .attr("x", 1000)
+    // .attr("y", (d, i) => 50 + (i * 30))
+
+    // const colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"]
     const colorScale = d3.scaleThreshold()
-        .domain([10000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1500000000])
-        .range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)", "rgb(3,19,43)"]);
+        .domain(threshHolds)
+        .range(colors);
 
     var proj = d3.geoMercator()
     // .scale(130)
@@ -53,7 +126,8 @@ function createMap(countries, population) {
 
     d3.select('svg')
         .selectAll('path')
-        .data(countries.features.filter((c) => c.id !== "ATA"))
+        // Get rid of Antartica and French Artic islands
+        .data(countries.features.filter((c) => c.id !== "ATA" && c.id !== "ATF"))
         .enter()
         .append('path')
         .attr('d', gpath)
