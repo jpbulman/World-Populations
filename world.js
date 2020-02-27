@@ -135,14 +135,15 @@ function createMap(countries, population, currentYear) {
         .attr('d', gpath)
         .attr('stroke-width', 1)
         .attr('stroke', '#252525')
-        .attr('fill', (d) => {
+        .attr('fill', d => {
             if (d.properties.name in countriesOfYear) {
                 // CSV data is in thousands
                 return colorScale(parseFloat(countriesOfYear[d.properties.name].PopTotal) * 1000)
             } else {
                 return "red"
             }
-        });
+        })
+        .attr("id", d => `drawing-${d.properties.name}`)
 
     // FOR MORE ON THIS, SEE ARTICLE THINKING WITH JOINS
     // d3.select('svg')
@@ -161,29 +162,29 @@ function createMap(countries, population, currentYear) {
     //   })
 
     // var mapZoom = d3.zoom()
-    //   .on('zoom', zoomed);
+    //     .on('zoom', zoomed);
 
     // var zoomSettings = d3.zoomIdentity
-    //   .translate(250, 250)
-    //   .scale(120);
+    //     .translate(250, 250)
+    //     .scale(120);
 
     // d3.select('svg')
-    //   .call(mapZoom)
-    //   .call(mapZoom.transform, zoomSettings);
+    //     .call(mapZoom)
+    //     .call(mapZoom.transform, zoomSettings);
 
     // function zoomed() {
-    //   var e = d3.event;
+    //     var e = d3.event;
 
-    //   proj
-    //     .translate([e.transform.x, e.transform.y])
-    //     .scale(e.transform.k);
+    //     proj
+    //         .translate([e.transform.x, e.transform.y])
+    //         .scale(e.transform.k);
 
-    //   d3.selectAll('path')
-    //     .attr('d', gpath);
+    //     d3.selectAll('path')
+    //         .attr('d', gpath);
 
-    //   d3.selectAll('circle')
-    //     .attr('cx', d => proj([d.x, d.y])[0])
-    //     .attr('cy', d => proj([d.x, d.y])[1]);
+    //     d3.selectAll('circle')
+    //         .attr('cx', d => proj([d.x, d.y])[0])
+    //         .attr('cy', d => proj([d.x, d.y])[1]);
     // }
 }
 
@@ -268,7 +269,6 @@ function drawBarGraphFromYear(countries, population, year) {
     countriesOfYear = countriesOfYear.filter(e => countryNames.includes(e["Location"])).slice(0, 20)
 
     x.domain(countriesOfYear.map((d) => d["Location"]))
-    console.log(d3.min(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000)))
     y.domain([d3.min(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000)), d3.max(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000))])
 
     g.append("g")
@@ -294,4 +294,24 @@ function drawBarGraphFromYear(countries, population, year) {
         .attr("y", d => y(Number(d["PopTotal"]) * 1000))
         .attr("width", x.bandwidth())
         .attr("height", d => height - y(Number(d["PopTotal"]) * 1000))
+        .style("fill", "steelblue")
+        .attr("id", d => d["Location"])
+        .on("mouseover", function () {
+            this.style.fill = "purple"
+            const selectedCountryName = this.id
+            document.getElementById(`drawing-${this.id}`).style.fill = "purple"
+            this.style.cursor = "pointer"
+        })
+        .on("mouseout", function () {
+            const barIsSelected = this.getAttribute("data-hasBeenSelected") === 'true'
+            if (!barIsSelected) {
+                document.getElementById(`drawing-${this.id}`).style.fill = "steelblue"
+                this.style.fill = "steelblue"
+            }
+        })
+        .on("click", function () {
+            const currentColor = this.style.fill
+            const currentHasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
+            this.setAttribute("data-hasBeenSelected", !currentHasBeenSelected)
+        })
 }
