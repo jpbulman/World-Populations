@@ -10,11 +10,12 @@ let yearPicker = document.getElementById("yearPicker")
 for (let i = 1955; i < 2100 + 1; i++) {
     yearPicker.options[yearPicker.options.length] = new Option(i, i)
 }
-yearPicker.selectedIndex = 2020 - 1955
+yearPicker.selectedIndex = new Date().getFullYear() - 1955
 
 // Can't use arrow function because of scope
 yearPicker.onchange = function () {
     const selectedYear = parseInt(this.value)
+    document.getElementById("currentYearText").innerHTML = `Current Year: ${selectedYear}`
     Promise.all([
         d3.json('world.geojson'),
         d3.csv('worldPopulation.csv')
@@ -27,8 +28,9 @@ Promise.all([
     d3.json('world.geojson'),
     d3.csv('worldPopulation.csv')
 ]).then(([countries, population]) => {
-    createMap(countries, population, 2020)
+    createMap(countries, population, new Date().getFullYear())
 })
+document.getElementById("currentYearText").innerHTML = `Current Year: ${new Date().getFullYear()}`
 
 function createMap(countries, population, currentYear) {
     d3.select("svg").selectAll("*").remove()
@@ -62,8 +64,8 @@ function createMap(countries, population, currentYear) {
             countriesOfYear[nameOfCountry] = element;
         }
     })
-    console.log(countries)
-    console.log(countriesOfYear)
+    // console.log(countries)
+    // console.log(countriesOfYear)
     let smallestPopulation = parseFloat(countriesOfYear[Object.keys(countriesOfYear)[0]].PopTotal)
     let largestPopulation = parseFloat(countriesOfYear[Object.keys(countriesOfYear)[0]].PopTotal)
     countries.features.forEach(currentCountry => {
@@ -183,4 +185,113 @@ function createMap(countries, population, currentYear) {
     //     .attr('cx', d => proj([d.x, d.y])[0])
     //     .attr('cy', d => proj([d.x, d.y])[1]);
     // }
+}
+
+function displayPopulationGivenYear(year) {
+    Promise.all([
+        d3.json('world.geojson'),
+        d3.csv('worldPopulation.csv')
+    ]).then(([countries, population]) => {
+        createMap(countries, population, year)
+    })
+}
+
+function cycle(year) {
+    if (year === 2101) {
+        return
+    }
+    const millisecondsToWait = 1000;
+    setTimeout(function () {
+        displayPopulationGivenYear(year)
+        cycle(year + 1)
+        document.getElementById("currentYearText").innerHTML = `Current Year: ${year}`
+    }, millisecondsToWait);
+}
+
+Promise.all([
+    d3.json('world.geojson'),
+    d3.csv('worldPopulation.csv')
+]).then(([countries, population]) => {
+    drawBarGraphFromYear(countries, population, new Date().getFullYear())
+})
+
+function drawBarGraphFromYear(countries, population, year) {
+    const barSvg = d3.select("#barChartWrapper").select("svg")
+    const margin = {
+        top: 20,
+        right: 20,
+        bottom: 30,
+        left: 100
+    }
+    const width = +barSvg.attr("width") - margin.left - margin.right
+    const height = +barSvg.attr("height") - margin.top - margin.bottom
+    const g = barSvg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    const x = d3.scaleBand()
+        .rangeRound([0, width])
+        .padding(0.1)
+
+    const y = d3.scaleLinear()
+        .rangeRound([height, 0])
+
+    let countriesOfYear = []
+    population.forEach(element => {
+        const cYear = element["Time"]
+        if (cYear == year && element["Variant"] === "Medium") {
+            let nameOfCountry = element.Location
+            // So the UN has official country names, which can be verbose sometimes (like Lao People's Democratic Republic = Laos)
+            // And the geojson has different names for them, so here I swap out the UN names for the geojson ones so that all
+            // countries get colored
+            // This was pretty annoying to do
+            switch (element.Location) {
+                case "Russian Federation": nameOfCountry = "Russia"; break;
+                case "Venezuela (Bolivarian Republic of)": nameOfCountry = "Venezuela"; break;
+                case "Bolivia (Plurinational State of)": nameOfCountry = "Bolivia"; break;
+                case "Falkland Islands (Malvinas)": nameOfCountry = "Falkland Islands"; break;
+                case "Dem. People's Republic of Korea": nameOfCountry = "South Korea"; break;
+                case "Republic of Korea": nameOfCountry = "North Korea"; break;
+                case "China, Taiwan Province of China": nameOfCountry = "Taiwan"; break;
+                case "Viet Nam": nameOfCountry = "Vietnam"; break;
+                case "Lao People's Democratic Republic": nameOfCountry = "Laos"; break;
+                case "Iran (Islamic Republic of)": nameOfCountry = "Iran"; break;
+                case "Côte d'Ivoire": nameOfCountry = "Ivory Coast"; break;
+                case "Czechia": nameOfCountry = "Czech Republic"; break;
+                case "Republic of Moldova": nameOfCountry = "Moldova"; break;
+                case "Syrian Arab Republic": nameOfCountry = "Syria"; break;
+                // case "Republic of Congo": nameOfCountry = "Congo"; break;
+            }
+            countriesOfYear.push(element)
+        }
+    })
+    let countryNames = []
+    countries["features"].forEach(d => countryNames.push(d["properties"]["name"]))
+    countriesOfYear = countriesOfYear.filter(e => countryNames.includes(e["Location"])).slice(0, 20)
+
+    x.domain(countriesOfYear.map((d) => d["Location"]))
+    console.log(d3.min(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000)))
+    y.domain([d3.min(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000)), d3.max(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000))])
+
+    g.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x))
+
+    g.append("g")
+        .call(d3.axisLeft(y))
+        .append("text")
+        .attr("fill", "#000")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 10)
+        .attr("dy", "0.71em")
+        .attr("text-anchor", "end")
+        .text("Speed");
+
+    g.selectAll(".bar")
+        .data(countriesOfYear)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", d => x(d["Location"]))
+        .attr("y", d => y(Number(d["PopTotal"]) * 1000))
+        .attr("width", x.bandwidth())
+        .attr("height", d => height - y(Number(d["PopTotal"]) * 1000))
 }

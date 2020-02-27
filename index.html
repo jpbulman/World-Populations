@@ -1,13 +1,28 @@
+<style>
+  body {
+    font-family: 'Roboto';
+  }
+</style>
+
 <body style="background: #C0C0C0">
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
-  <div style="margin: auto; width: 50%; text-align: center;">
+  <h1 style="text-align: center;">Population of the World</h1>
+  <h2 style="text-align: center; margin-bottom: 2em;">By JP Bulman</h2>
+
+  <div style="margin: auto; width: 55%; text-align: center;">
     <svg width=1200 height=500></svg>
 
     <div style="text-align: center;" id="sliderContainer">
-      <p>Year: <select id="yearPicker"></select></p>
+      <p id="currentYearText">Current Year:</p>
+      <button onclick="cycle(1955)">&#9658</button>
+      <p>Select a Year: <select id="yearPicker"></select></p>
     </div>
+  </div>
+
+  <div id="barChartWrapper">
+    <svg width="1750" height="500"></svg>
   </div>
 
   <script src="world.js"></script>
