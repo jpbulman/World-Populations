@@ -1,3 +1,5 @@
+const hoverColor = "green"
+
 // Stolen from: https://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -91,10 +93,11 @@ function createMap(countries, population, currentYear) {
 
     const widthOfLegendBox = 20
     d3.select("svg")
-        .selectAll("rect")
+        .selectAll(".legend")
         .data(threshHolds)
         .enter()
         .append("rect")
+        .attr("class", "legend")
         .attr("x", 1000)
         .attr("y", (d, i) => 50 + (i * (widthOfLegendBox + 10)))
         .attr("width", widthOfLegendBox)
@@ -155,10 +158,11 @@ function createMap(countries, population, currentYear) {
         })
         .attr("id", d => `drawing-${d.properties.name}`)
         .on("mouseover", function () {
-            // this.style.fill = "purple"
+            this.style.cursor = "pointer"
+            this.style.fill = hoverColor
             const countryName = this.id.replace("drawing-", "")
             const formattedNumberOfPeople = numberWithCommas(parseFloat(countriesOfYear[countryName].PopTotal) * 1000)
-            // document.getElementById(countryName).style.fill = "purple"
+            document.getElementById(countryName).style.fill = hoverColor
             toolTipDiv.transition()
                 .duration(200)
                 .style("opacity", .9)
@@ -167,12 +171,19 @@ function createMap(countries, population, currentYear) {
                 .style("top", (d3.event.pageY - 28) + "px");
         })
         .on("mouseout", function () {
-            // this.style.fill = "steelblue"
-            // const countryName = this.id.replace("drawing-", "")
-            // document.getElementById(countryName).style.fill = "steelblue"
+            const countryName = this.id.replace("drawing-", "")
+            const hasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
+            if (!hasBeenSelected) {
+                this.style.fill = colorOfCountries[countryName]
+                document.getElementById(countryName).style.fill = "steelblue"
+            }
             toolTipDiv.transition()
                 .duration(500)
                 .style("opacity", 0)
+        })
+        .on("click", function () {
+            const hasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
+            this.setAttribute("data-hasBeenSelected", !hasBeenSelected)
         })
 
     // FOR MORE ON THIS, SEE ARTICLE THINKING WITH JOINS
@@ -305,8 +316,8 @@ function drawBarGraphFromYear(countries, population, year) {
         .style("fill", "steelblue")
         .attr("id", d => d["Location"])
         .on("mouseover", function () {
-            this.style.fill = "purple"
-            document.getElementById(`drawing-${this.id}`).style.fill = "purple"
+            this.style.fill = hoverColor
+            document.getElementById(`drawing-${this.id}`).style.fill = hoverColor
             this.style.cursor = "pointer"
         })
         .on("mouseout", function () {

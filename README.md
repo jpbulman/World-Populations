@@ -1,45 +1,26 @@
-Assignment 4 - ~~Visualizations and Multiple Views~~ DataVis Remix!  
-===
+# Assignment 4: Datavis Remix
+The goal of this assignment is to find a visualization online, critique it, and then remake it based on the suggestions.
 
-The primary aim of this assignment is to showcase your **individual** skills at critiquing and creating interactive visualizations on the web.
+## Original Visualization
+![worldpopulationmap](img/img.png)
 
-### Your Task
+[Source](https://i.pinimg.com/originals/99/17/c8/9917c8748a6d25138c6e2a4a53bfbd3b.png)
 
-Your task is to choose a visualization and remix it.
-By remix, we mean:
+## Critique
 
-- Critique the original vis
-- Redesign some aspect of it
-- Implement your redesign
+This visualization of the world's population is done fairly well, but is lacking some big features that are crucial to understanding the data. One of the first things that I noticed is that there is no legend. Intuitvely, you would expect the darkert regions to have more people, but even if that is the case, the viewer cannot see exactly how many people that actually is. The second thing I noticed is that there is no given year for this data. It is probably just the year this was made in, but it is not clear if that is the case or not. Finally, I thought that the color scheme could have been chosen a little bit differently. The reds are somewhat alarming and give a sense of danger. The darker shades also clash with the other colors, as they are so dark they are practically black.
 
-Examples of remixes include:
-- taking a static choropleth map with a bad color scale, implementing a new version in d3, adding interactivity, and improving the color scale to show the original data in a more effective way
-- finding a poorly designed or hard-to-use interactive visualization, and making a new version with easier to use navigation, features that enable the user to explore the data in new ways, by adding new views
+## Technical Achievements
 
-**Remember: the intent of this assignment is for you to demonstrate your understanding of the theory (e.g. concepts from Munzner's book) and practice (d3, and any tools you use for exploring the data) of visualization.**
+## Design Achievements
 
-Incorporating a brief writeup with your remix is a good idea.
-Communicate what the original vis was, what the major issues were, and what new things can be seen with your redesign.
-You could have text directly on the page, an "info" button, an about page, etc.
+## Sources
+[Bar Chart](https://bl.ocks.org/caravinden/d04238c4c9770020ff6867ee92c7dac1)
 
-### Multiple Views (required)
-One of the most powerful techniques for mitigating the shortcomings of a given visualization is to link it with other views.
+[Select box](https://electrictoolbox.com/javascript-add-options-html-select/)
 
-Linking a map to a bar or scatterplot, for instance, may allow you to overcome the shortcomings of a map.
+[Thresholds for World Population](http://bl.ocks.org/micahstubbs/8e15870eb432a21f0bc4d3d527b2d14f)
 
-In general, linking visualizations allows you to explore different parts of the data between views, and mitigates the shortcomings of a given view by pairing it with other views.
+[Tooltips](https://bl.ocks.org/d3noob/a22c42db65eb00d4e369)
 
-For this assignment, we want to see at least two linked views, in that interactions in one view updates the other, and vice versa. Many multiple views visualizations use more than two views, so consider such directions as possibilities for tech/design achievements. Be sure to think about what views work best for given tasks, and try to iterate/prototype if possible!
-
-Requirements
----
-
-0. Your code should be forked from the GitHub repo and linked using GitHub pages.
-1. Your project should load a dataset you found on the web from the vis you're remixing. You may extract the data by sight if necessary. Put this file in your repo.
-2. Your project should use d3 to build a visualization of the dataset. 
-3. Your writeup (readme.md in the repo) should contain the following:
-
-- Working link to the visualization hosted on gh-pages or other external sources.
-- Concise description and screenshot of your visualization.
-- Description of the technical achievements you attempted with this visualization.
-- Description of the design achievements you attempted with this visualization.
+[United Nations Projected Population CSV](https://population.un.org/wpp/Download/Standard/CSV/)
