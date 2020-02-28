@@ -3,6 +3,11 @@ function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+const toolTipDiv = d3.select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0)
+
 const width = 1900
 const height = 500
 
@@ -32,13 +37,15 @@ Promise.all([
 })
 document.getElementById("currentYearText").innerHTML = `Current Year: ${new Date().getFullYear()}`
 
+// Map of country name to country color 
+let colorOfCountries = {}
 function createMap(countries, population, currentYear) {
     d3.select("svg").selectAll("*").remove()
 
     let countriesOfYear = {}
     population.forEach(element => {
         const cYear = element["Time"]
-        if (cYear == currentYear) {
+        if (cYear == currentYear && element["Variant"] === "Medium") {
             let nameOfCountry = element.Location
             // So the UN has official country names, which can be verbose sometimes (like Lao People's Democratic Republic = Laos)
             // And the geojson has different names for them, so here I swap out the UN names for the geojson ones so that all
@@ -138,12 +145,35 @@ function createMap(countries, population, currentYear) {
         .attr('fill', d => {
             if (d.properties.name in countriesOfYear) {
                 // CSV data is in thousands
-                return colorScale(parseFloat(countriesOfYear[d.properties.name].PopTotal) * 1000)
+                const colorForCurrentCountry = colorScale(parseFloat(countriesOfYear[d.properties.name].PopTotal) * 1000)
+                colorOfCountries[d.properties.name] = colorForCurrentCountry
+                return colorForCurrentCountry
             } else {
+                colorOfCountries[d.properties.name] = "red"
                 return "red"
             }
         })
         .attr("id", d => `drawing-${d.properties.name}`)
+        .on("mouseover", function () {
+            // this.style.fill = "purple"
+            const countryName = this.id.replace("drawing-", "")
+            const formattedNumberOfPeople = numberWithCommas(parseFloat(countriesOfYear[countryName].PopTotal) * 1000)
+            // document.getElementById(countryName).style.fill = "purple"
+            toolTipDiv.transition()
+                .duration(200)
+                .style("opacity", .9)
+            toolTipDiv.html(`${countryName}<br/>Population: ${formattedNumberOfPeople}`)
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function () {
+            // this.style.fill = "steelblue"
+            // const countryName = this.id.replace("drawing-", "")
+            // document.getElementById(countryName).style.fill = "steelblue"
+            toolTipDiv.transition()
+                .duration(500)
+                .style("opacity", 0)
+        })
 
     // FOR MORE ON THIS, SEE ARTICLE THINKING WITH JOINS
     // d3.select('svg')
@@ -239,28 +269,6 @@ function drawBarGraphFromYear(countries, population, year) {
     population.forEach(element => {
         const cYear = element["Time"]
         if (cYear == year && element["Variant"] === "Medium") {
-            let nameOfCountry = element.Location
-            // So the UN has official country names, which can be verbose sometimes (like Lao People's Democratic Republic = Laos)
-            // And the geojson has different names for them, so here I swap out the UN names for the geojson ones so that all
-            // countries get colored
-            // This was pretty annoying to do
-            switch (element.Location) {
-                case "Russian Federation": nameOfCountry = "Russia"; break;
-                case "Venezuela (Bolivarian Republic of)": nameOfCountry = "Venezuela"; break;
-                case "Bolivia (Plurinational State of)": nameOfCountry = "Bolivia"; break;
-                case "Falkland Islands (Malvinas)": nameOfCountry = "Falkland Islands"; break;
-                case "Dem. People's Republic of Korea": nameOfCountry = "South Korea"; break;
-                case "Republic of Korea": nameOfCountry = "North Korea"; break;
-                case "China, Taiwan Province of China": nameOfCountry = "Taiwan"; break;
-                case "Viet Nam": nameOfCountry = "Vietnam"; break;
-                case "Lao People's Democratic Republic": nameOfCountry = "Laos"; break;
-                case "Iran (Islamic Republic of)": nameOfCountry = "Iran"; break;
-                case "Côte d'Ivoire": nameOfCountry = "Ivory Coast"; break;
-                case "Czechia": nameOfCountry = "Czech Republic"; break;
-                case "Republic of Moldova": nameOfCountry = "Moldova"; break;
-                case "Syrian Arab Republic": nameOfCountry = "Syria"; break;
-                // case "Republic of Congo": nameOfCountry = "Congo"; break;
-            }
             countriesOfYear.push(element)
         }
     })
@@ -276,14 +284,14 @@ function drawBarGraphFromYear(countries, population, year) {
         .call(d3.axisBottom(x))
 
     g.append("g")
-        .call(d3.axisLeft(y))
+        .call(d3.axisLeft(y).ticks(20))
         .append("text")
         .attr("fill", "#000")
         .attr("transform", "rotate(-90)")
         .attr("y", 10)
         .attr("dy", "0.71em")
         .attr("text-anchor", "end")
-        .text("Speed");
+        .text("Population");
 
     g.selectAll(".bar")
         .data(countriesOfYear)
@@ -298,19 +306,17 @@ function drawBarGraphFromYear(countries, population, year) {
         .attr("id", d => d["Location"])
         .on("mouseover", function () {
             this.style.fill = "purple"
-            const selectedCountryName = this.id
             document.getElementById(`drawing-${this.id}`).style.fill = "purple"
             this.style.cursor = "pointer"
         })
         .on("mouseout", function () {
             const barIsSelected = this.getAttribute("data-hasBeenSelected") === 'true'
             if (!barIsSelected) {
-                document.getElementById(`drawing-${this.id}`).style.fill = "steelblue"
+                document.getElementById(`drawing-${this.id}`).style.fill = `${colorOfCountries[this.id]}`
                 this.style.fill = "steelblue"
             }
         })
         .on("click", function () {
-            const currentColor = this.style.fill
             const currentHasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
             this.setAttribute("data-hasBeenSelected", !currentHasBeenSelected)
         })

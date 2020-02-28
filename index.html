@@ -2,17 +2,30 @@
   body {
     font-family: 'Roboto';
   }
+
+  div.tooltip {
+    position: absolute;
+    text-align: center;
+    display: inline-block;
+    height: 28px;
+    padding: 7.5px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+  }
 </style>
 
 <body style="background: #C0C0C0">
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
-  <h1 style="text-align: center;">Population of the World</h1>
+  <h1 style="text-align: center;">Projected Populations of the World</h1>
   <h2 style="text-align: center; margin-bottom: 2em;">By JP Bulman</h2>
 
   <div style="margin: auto; width: 55%; text-align: center;">
-    <svg width=1200 height=500></svg>
+    <svg width=1000 height=500></svg>
 
     <div style="text-align: center;" id="sliderContainer">
       <p id="currentYearText">Current Year:</p>
