@@ -1,6 +1,9 @@
 # Assignment 4: Datavis Remix
 The goal of this assignment is to find a visualization online, critique it, and then remake it based on the suggestions.
 
+## My Visualization
+[Link](https://jpbulman.github.io/04-Remix/)
+
 ## Original Visualization
 ![worldpopulationmap](img/img.png)
 

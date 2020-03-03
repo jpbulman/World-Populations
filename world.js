@@ -1,4 +1,5 @@
 const hoverColor = "green"
+const barColor = "steelblue"
 
 // Stolen from: https://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
 function numberWithCommas(x) {
@@ -28,6 +29,7 @@ yearPicker.onchange = function () {
         d3.csv('worldPopulation.csv')
     ]).then(([countries, population]) => {
         createMap(countries, population, selectedYear)
+        drawBarGraph(countries, population, selectedYear, 20)
     })
 }
 
@@ -36,6 +38,7 @@ Promise.all([
     d3.csv('worldPopulation.csv')
 ]).then(([countries, population]) => {
     createMap(countries, population, new Date().getFullYear())
+    drawBarGraph(countries, population, new Date().getFullYear(), 20)
 })
 document.getElementById("currentYearText").innerHTML = `Current Year: ${new Date().getFullYear()}`
 
@@ -88,8 +91,8 @@ function createMap(countries, population, currentYear) {
         }
     })
 
-    const threshHolds = [10000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1500000000]
-    const colors = ["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)", "rgb(3,19,43)"]
+    const threshHolds = [10000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1500000000, "Not Found or not Reported"]
+    const colors = ["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)", "rgb(3,19,43)", "red"]
 
     const widthOfLegendBox = 20
     d3.select("svg")
@@ -102,6 +105,8 @@ function createMap(countries, population, currentYear) {
         .attr("y", (d, i) => 50 + (i * (widthOfLegendBox + 10)))
         .attr("width", widthOfLegendBox)
         .attr("height", widthOfLegendBox)
+        .attr("stroke", "black")
+        .attr("stroke-width", "1")
         .style("fill", (d, i) => colors[i])
 
     d3.select("svg")
@@ -160,9 +165,14 @@ function createMap(countries, population, currentYear) {
         .on("mouseover", function () {
             this.style.cursor = "pointer"
             this.style.fill = hoverColor
+            this.setAttribute("stroke-width", 2)
+            this.setAttribute("stroke", "white")
             const countryName = this.id.replace("drawing-", "")
             const formattedNumberOfPeople = numberWithCommas(parseFloat(countriesOfYear[countryName].PopTotal) * 1000)
-            document.getElementById(countryName).style.fill = hoverColor
+            const bar = document.getElementById(countryName)
+            if (bar) {
+                bar.style.fill = hoverColor
+            }
             toolTipDiv.transition()
                 .duration(200)
                 .style("opacity", .9)
@@ -171,19 +181,26 @@ function createMap(countries, population, currentYear) {
                 .style("top", (d3.event.pageY - 28) + "px");
         })
         .on("mouseout", function () {
+            this.setAttribute("stroke-width", 1)
+            this.setAttribute("stroke", "black")
             const countryName = this.id.replace("drawing-", "")
             const hasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
             if (!hasBeenSelected) {
                 this.style.fill = colorOfCountries[countryName]
-                document.getElementById(countryName).style.fill = "steelblue"
+                const bar = document.getElementById(countryName)
+                if (bar) {
+                    bar.style.fill = barColor
+                }
             }
             toolTipDiv.transition()
                 .duration(500)
                 .style("opacity", 0)
         })
         .on("click", function () {
+            const countryName = this.id.replace("drawing-", "")
             const hasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
             this.setAttribute("data-hasBeenSelected", !hasBeenSelected)
+            document.getElementById(countryName).setAttribute("data-hasBeenSelected", !hasBeenSelected)
         })
 
     // FOR MORE ON THIS, SEE ARTICLE THINKING WITH JOINS
@@ -202,31 +219,31 @@ function createMap(countries, population, currentYear) {
     //     d3.select('#info').text(d.label);
     //   })
 
-    // var mapZoom = d3.zoom()
-    //     .on('zoom', zoomed);
+    var mapZoom = d3.zoom()
+        .on('zoom', zoomed);
 
-    // var zoomSettings = d3.zoomIdentity
-    //     .translate(250, 250)
-    //     .scale(120);
+    var zoomSettings = d3.zoomIdentity
+        .translate(500, 200)
+        .scale(120);
 
-    // d3.select('svg')
-    //     .call(mapZoom)
-    //     .call(mapZoom.transform, zoomSettings);
+    d3.select('svg')
+        .call(mapZoom)
+        .call(mapZoom.transform, zoomSettings);
 
-    // function zoomed() {
-    //     var e = d3.event;
+    function zoomed() {
+        var e = d3.event;
 
-    //     proj
-    //         .translate([e.transform.x, e.transform.y])
-    //         .scale(e.transform.k);
+        proj
+            .translate([e.transform.x, e.transform.y])
+            .scale(e.transform.k);
 
-    //     d3.selectAll('path')
-    //         .attr('d', gpath);
+        d3.selectAll('path')
+            .attr('d', gpath);
 
-    //     d3.selectAll('circle')
-    //         .attr('cx', d => proj([d.x, d.y])[0])
-    //         .attr('cy', d => proj([d.x, d.y])[1]);
-    // }
+        d3.selectAll('circle')
+            .attr('cx', d => proj([d.x, d.y])[0])
+            .attr('cy', d => proj([d.x, d.y])[1]);
+    }
 }
 
 function displayPopulationGivenYear(year) {
@@ -245,24 +262,30 @@ function cycle(year) {
     const millisecondsToWait = 1000;
     setTimeout(function () {
         displayPopulationGivenYear(year)
+        drawBarGraphFromYear(year)
         cycle(year + 1)
         document.getElementById("currentYearText").innerHTML = `Current Year: ${year}`
     }, millisecondsToWait);
 }
 
-Promise.all([
-    d3.json('world.geojson'),
-    d3.csv('worldPopulation.csv')
-]).then(([countries, population]) => {
-    drawBarGraphFromYear(countries, population, new Date().getFullYear())
-})
+function drawBarGraphFromYear(year) {
+    Promise.all([
+        d3.json('world.geojson'),
+        d3.csv('worldPopulation.csv')
+    ]).then(([countries, population]) => {
+        drawBarGraph(countries, population, year, 20)
+    })
+}
 
-function drawBarGraphFromYear(countries, population, year) {
+function drawBarGraph(countries, population, year, numberOfBars) {
+    console.log(countries)
+    console.log(population)
+    d3.select("#barChartWrapper").select("svg").selectAll("*").remove()
     const barSvg = d3.select("#barChartWrapper").select("svg")
     const margin = {
         top: 20,
         right: 20,
-        bottom: 30,
+        bottom: 100,
         left: 100
     }
     const width = +barSvg.attr("width") - margin.left - margin.right
@@ -285,8 +308,19 @@ function drawBarGraphFromYear(countries, population, year) {
     })
     let countryNames = []
     countries["features"].forEach(d => countryNames.push(d["properties"]["name"]))
-    countriesOfYear = countriesOfYear.filter(e => countryNames.includes(e["Location"])).slice(0, 20)
-
+    countriesOfYear = countriesOfYear.filter(e => countryNames.includes(e["Location"]))
+    countriesOfYear = countriesOfYear.sort((a, b) => {
+        const aPop = Number(a.PopTotal) * 1000
+        const bPop = Number(b.PopTotal) * 1000
+        if (aPop < bPop) {
+            return 1
+        } else if (bPop < aPop) {
+            return -1
+        } else {
+            return 0
+        }
+    })
+    countriesOfYear = countriesOfYear.slice(0, numberOfBars)
     x.domain(countriesOfYear.map((d) => d["Location"]))
     y.domain([d3.min(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000)), d3.max(countriesOfYear.map(e => Number(e["PopTotal"]) * 1000))])
 
@@ -295,7 +329,7 @@ function drawBarGraphFromYear(countries, population, year) {
         .call(d3.axisBottom(x))
 
     g.append("g")
-        .call(d3.axisLeft(y).ticks(20))
+        .call(d3.axisLeft(y).ticks(10))
         .append("text")
         .attr("fill", "#000")
         .attr("transform", "rotate(-90)")
@@ -313,7 +347,9 @@ function drawBarGraphFromYear(countries, population, year) {
         .attr("y", d => y(Number(d["PopTotal"]) * 1000))
         .attr("width", x.bandwidth())
         .attr("height", d => height - y(Number(d["PopTotal"]) * 1000))
-        .style("fill", "steelblue")
+        .style("fill", barColor)
+        .style("stroke", "black")
+        .style("stroke-width", 1)
         .attr("id", d => d["Location"])
         .on("mouseover", function () {
             this.style.fill = hoverColor
@@ -324,11 +360,12 @@ function drawBarGraphFromYear(countries, population, year) {
             const barIsSelected = this.getAttribute("data-hasBeenSelected") === 'true'
             if (!barIsSelected) {
                 document.getElementById(`drawing-${this.id}`).style.fill = `${colorOfCountries[this.id]}`
-                this.style.fill = "steelblue"
+                this.style.fill = barColor
             }
         })
         .on("click", function () {
             const currentHasBeenSelected = this.getAttribute("data-hasBeenSelected") === 'true'
             this.setAttribute("data-hasBeenSelected", !currentHasBeenSelected)
+            document.getElementById(`drawing-${this.id}`).setAttribute("data-hasBeenSelected", !currentHasBeenSelected)
         })
 }
