@@ -76,8 +76,6 @@ function createMap(countries, population, currentYear) {
             countriesOfYear[nameOfCountry] = element;
         }
     })
-    // console.log(countries)
-    // console.log(countriesOfYear)
     let smallestPopulation = parseFloat(countriesOfYear[Object.keys(countriesOfYear)[0]].PopTotal)
     let largestPopulation = parseFloat(countriesOfYear[Object.keys(countriesOfYear)[0]].PopTotal)
     countries.features.forEach(currentCountry => {
@@ -91,7 +89,7 @@ function createMap(countries, population, currentYear) {
         }
     })
 
-    const threshHolds = [10000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1500000000, "Not Found or not Reported"]
+    const threshHolds = [10000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000, 500000000, 1500000000, "Not Found"]
     const colors = ["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,107)", "rgb(3,19,43)", "red"]
 
     const widthOfLegendBox = 20
@@ -118,16 +116,6 @@ function createMap(countries, population, currentYear) {
         .attr("y", (d, i) => 50 + (widthOfLegendBox / 2) + (i * (widthOfLegendBox + 10)))
         .attr("dy", ".35em")
         .text((d) => numberWithCommas(d));
-
-    // d3.select("svg")
-    // .selectAll("text")
-    // .data(threshHolds)
-    // .append("text")
-    // .attr("font-size", "300px")
-    // .text("fooo")
-    // .attr("fill", "red")
-    // .attr("x", 1000)
-    // .attr("y", (d, i) => 50 + (i * 30))
 
     // const colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"]
     const colorScale = d3.scaleThreshold()
@@ -203,22 +191,6 @@ function createMap(countries, population, currentYear) {
             document.getElementById(countryName).setAttribute("data-hasBeenSelected", !hasBeenSelected)
         })
 
-    // FOR MORE ON THIS, SEE ARTICLE THINKING WITH JOINS
-    // d3.select('svg')
-    //   .selectAll('circle')
-    //   .data(cities)
-    //   .enter()
-    //   .append('circle')
-    //   .attr('r', 3)
-    //   .attr('cx', d => proj([d.x, d.y])[0])
-    //   .attr('cy', d => proj([d.x, d.y])[1])
-    //   .attr('stroke-width', 1)
-    //   .attr('stroke', '#4F442B')
-    //   .attr('fill', '#FCBC34')
-    //   .on('mouseover', function (d) {
-    //     d3.select('#info').text(d.label);
-    //   })
-
     var mapZoom = d3.zoom()
         .on('zoom', zoomed);
 
@@ -278,8 +250,6 @@ function drawBarGraphFromYear(year) {
 }
 
 function drawBarGraph(countries, population, year, numberOfBars) {
-    console.log(countries)
-    console.log(population)
     d3.select("#barChartWrapper").select("svg").selectAll("*").remove()
     const barSvg = d3.select("#barChartWrapper").select("svg")
     const margin = {

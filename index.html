@@ -21,21 +21,45 @@
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
-  <h1 style="text-align: center;">Projected Populations of the World</h1>
-  <h2 style="text-align: center; margin-bottom: 2em;">By JP Bulman</h2>
+  <div style="text-align: center; margin-bottom: 2em;">
+    <h1>Projected Populations of the World</h1>
+    <h2>By JP Bulman</h2>
+    <a href="#about">About</a>
+    <a href="#sources">Sources</a>
+  </div>
 
   <div style="margin: auto; width: 55%; text-align: center;">
     <svg width=1200 height=500></svg>
 
     <div style="text-align: center;" id="sliderContainer">
       <p id="currentYearText">Current Year:</p>
-      <button onclick="cycle(1955)">&#9658</button>
+      <!-- <button onclick="cycle(1955)">&#9658</button> -->
       <p>Select a Year: <select id="yearPicker"></select></p>
     </div>
   </div>
 
   <div id="barChartWrapper">
     <svg width="1750" height="1000"></svg>
+  </div>
+
+  <div>
+    <h2 id="about">About</h2>
+    <p>This visualization shows the world's projected population for a given year between 1955 and 2100. If you want to
+      select a year, simply change the
+      <a href="#yearPicker">year picker</a> to the year you want to see the population for. To see the exact population
+      for a given country, simply mouse over it
+      on the map and the tooltip will give the number of people. The map is also zoomable so you can see or hover over
+      the much smaller countries. You
+      can also select a country by simply clicking it in the map or its corresponding bar in the graph below. Once you
+      have selected a country, it will
+      stay selected until you click it again.
+    </p>
+
+    <h2 id="sources">Sources</h2>
+    <p>The sources for the actual data used in this visualization is from the <a
+        href="https://population.un.org/wpp/Download/Standard/CSV/" target="#">UN</a>. The source code can be found on
+      my GitHub
+      <a href="https://github.com/jpbulman/04-Remix" target="#">here</a>.</p>
   </div>
 
   <script src="world.js"></script>
